@@ -1069,5 +1069,135 @@
         </input>
 		<output>/engines/engine[1]/egt-actual</output>
     </filter>
+	
+	<filter>
+        <name>Left Pneumatic Supply (HP Compressor)</name>
+        <type>gain</type>
+        <gain>1</gain>
+		<enable>
+			<condition>
+				<and>
+					<less-than>
+						<property>/engines/engine[0]/n2</property>
+						<value>78</value>
+					</less-than>
+				</and>
+			</condition>
+		</enable>
+        <update-interval-secs type="double">0.05</update-interval-secs>
+        <input>
+            <expression>
+                <table>
+                    <property>/engines/engine[0]/n2</property> 
+					<entry><ind>0</ind><dep>0</dep></entry>
+                    <entry><ind>55</ind><dep>33.7</dep></entry>
+                    <entry><ind>78</ind><dep>39.1</dep></entry>
+                </table>
+            </expression>
+        </input>
+		<output>/systems/pneumatic/bleed1-filter</output>
+    </filter>
+	
+	<filter>
+        <name>Left Pneumatic Supply (IP Compressor)</name>
+        <type>gain</type>
+        <gain>1</gain>
+		<enable>
+			<condition>
+				<and>
+					<greater-than>
+						<property>/engines/engine[0]/n2</property>
+						<value>78</value>
+					</greater-than>
+				</and>
+			</condition>
+		</enable>
+        <update-interval-secs type="double">0.05</update-interval-secs>
+        <input>
+            <expression>
+                <table>
+                    <property>/engines/engine[0]/n2</property> 
+                    <entry><ind>78</ind><dep>41.6</dep></entry>
+                    <entry><ind>105</ind><dep>54.2</dep></entry>
+                </table>
+            </expression>
+        </input>
+		<output>/systems/pneumatic/bleed1-filter</output>
+    </filter>
+	
+	<filter>
+        <name>Right Pneumatic Supply (HP Compressor)</name>
+        <type>gain</type>
+        <gain>1</gain>
+		<enable>
+			<condition>
+				<and>
+					<less-than>
+						<property>/engines/engine[1]/n2</property>
+						<value>78</value>
+					</less-than>
+				</and>
+			</condition>
+		</enable>
+        <update-interval-secs type="double">0.05</update-interval-secs>
+        <input>
+            <expression>
+                <table>
+                    <property>/engines/engine[1]/n2</property> 
+					<entry><ind>0</ind><dep>0</dep></entry>
+                    <entry><ind>55</ind><dep>32.8</dep></entry>
+                    <entry><ind>78</ind><dep>38.5</dep></entry>
+                </table>
+            </expression>
+        </input>
+		<output>/systems/pneumatic/bleed2-filter</output>
+    </filter>
+	
+	<filter>
+        <name>Right Pneumatic Supply (IP Compressor)</name>
+        <type>gain</type>
+        <gain>1</gain>
+		<enable>
+			<condition>
+				<and>
+					<greater-than>
+						<property>/engines/engine[1]/n2</property>
+						<value>78</value>
+					</greater-than>
+				</and>
+			</condition>
+		</enable>
+        <update-interval-secs type="double">0.05</update-interval-secs>
+        <input>
+            <expression>
+                <table>
+                    <property>/engines/engine[1]/n2</property> 
+                    <entry><ind>78</ind><dep>41.8</dep></entry>
+                    <entry><ind>105</ind><dep>54.2</dep></entry>
+                </table>
+            </expression>
+        </input>
+		<output>/systems/pneumatic/bleed2-filter</output>
+    </filter>
+	
+	<filter>
+		<name>bleed1</name>
+		<type>noise-spike</type>
+		<input> 
+			<property>/systems/pneumatic/bleed1-filter</property>
+		</input>
+		<output>/systems/pneumatic/bleed1-norm</output> 
+		<max-rate-of-change>15</max-rate-of-change>
+	</filter>
+	
+	<filter>
+		<name>bleed2</name>
+		<type>noise-spike</type>
+		<input> 
+			<property>/systems/pneumatic/bleed2-filter</property>
+		</input>
+		<output>/systems/pneumatic/bleed2-norm</output>
+		<max-rate-of-change>15</max-rate-of-change>
+	</filter>
 
 </PropertyList>

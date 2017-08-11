@@ -10,6 +10,7 @@
 #####################
 
 var engines = props.globals.getNode("/engines").getChildren("engine");
+var oat = getprop("/environment/temperature-degc");
 var n1_min = 22.4;
 var n2_min = 60.7;
 var egt_min = 434;
@@ -23,17 +24,19 @@ var n2_max = 102.1;
 var egt_max = 712;
 var n1_wm = 0;
 var n2_wm = 0;
-var apu_max = 99.2;
-var apu_egt_min = 496;
-var apu_egt_max = 643;
-var spinup_time = 49;
+var apu_max = 100;
+var apu_egt_min = math.round((rand() * 2.5 ) + 365, 0.1);
+var apu_egt_max = math.round((rand() * 5 ) + 825, 0.1);
+var spinup_time = 65;
 var start_time = 10;
 var egt_lightup_time = 2;
 var egt_lightdn_time = 8;
 var shutdown_time = 20;
 var egt_shutdown_time = 20;
+setprop("/systems/apu/bleedhasbeenused", 0);
 setprop("/systems/apu/rpm", 0);
-setprop("/systems/apu/egt", 42);
+setprop("/systems/apu/egt", oat);
+setprop("/systems/apu/flap", 0);
 setprop("/controls/engines/engine[0]/reverser", 0);
 setprop("/controls/engines/engine[1]/reverser", 0);
 setprop("/controls/engines/engine[0]/igniter-a", 0);
@@ -46,12 +49,13 @@ setprop("/controls/engines/engine[1]/last-igniter", "B");
 var eng_init = func {
 	setprop("/controls/engines/engine[0]/man-start", 0);
 	setprop("/controls/engines/engine[1]/man-start", 0);
+	apu_egt_updatet.start();
 }
 
 ##############################
 # Trigger Startups and Stops #
 ##############################
-
+	
 setlistener("/controls/engines/engine[0]/cutoff-switch", func {
 	if (getprop("/controls/engines/engine[0]/cutoff-switch") == 0) {
 		if (getprop("/controls/engines/engine[0]/man-start") == 0) {
@@ -283,37 +287,59 @@ var eng_two_n2_check = func {
 	}
 }
 
+#######
+# APU #
+#######
+
+var apu_egt_update = func {
+	oat = getprop("/environment/temperature-degc");
+	if ((getprop("/controls/APU/master") == 0) and (getprop("/controls/APU/start") == 0) and (getprop("/systems/apu/rpm") == 0)) {
+		setprop("/systems/apu/egt", oat);
+	}
+}
+
+var apu_fix = func { 
+	if (getprop("/systems/apu/rpm") >= 91) {
+		setprop("/systems/pneumatic/apu-ind", "DELIVER"); # this is required to trigger the beginning of the loop
+	}
+}
+
 #############
 # Start APU #
 #############
 
 setlistener("/controls/APU/start", func {
-	if ((getprop("/controls/APU/master") == 1) and (getprop("/controls/APU/start") == 1)) {
-		if (getprop("/systems/acconfig/autoconfig-running") == 0) {
-			interpolate("/systems/apu/rpm", apu_max, spinup_time);
-			apu_egt_checkt.start();
-		} else if (getprop("/systems/acconfig/autoconfig-running") == 1) {
-			interpolate("/systems/apu/rpm", apu_max, 5);
-			interpolate("/systems/apu/egt", apu_egt_max, 5);
-		}
+	if ((getprop("/controls/APU/master") == 1) and (getprop("/controls/APU/start") == 1) and (getprop("/systems/electrical/bus/dcbat") > 25)) {
+		settimer(func { 
+			setprop("/systems/apu/flap", 1);
+			if (getprop("/systems/acconfig/autoconfig-running") == 0) {
+				interpolate("/systems/apu/rpm", apu_max, spinup_time);
+				apu_egt_checkt.start();
+				apu_fixt.start();
+			} else if (getprop("/systems/acconfig/autoconfig-running") == 1) {
+				interpolate("/systems/apu/rpm", apu_max, 5);
+				interpolate("/systems/apu/egt", apu_egt_max, 5);
+			}
+		}, 8);
 	} else if (getprop("/controls/APU/master") == 0) {
 		apu_egt_checkt.stop();
 		apu_stop();
+		apu_fixt.stop();
 	}
 });
 
 var apu_egt_check = func {
-	if (getprop("/systems/apu/rpm") >= 28) {
+	if (getprop("/systems/apu/rpm") >= 11) {
 		apu_egt_checkt.stop();
-		interpolate("/systems/apu/egt", apu_egt_max, 5);
+		interpolate("/systems/apu/egt", apu_egt_max, 22);
 		apu_egt2_checkt.start();
 	}
 }
 
 var apu_egt2_check = func {
-	if (getprop("/systems/apu/egt") >= 643) {
+	if (getprop("/systems/apu/egt") >= 825) {
 		apu_egt2_checkt.stop();
-		interpolate("/systems/apu/egt", apu_egt_min, 20);
+		interpolate("/systems/apu/egt", apu_egt_min, 37.5);
 	}
 }
 
@@ -324,15 +350,73 @@ var apu_egt2_check = func {
 setlistener("/controls/APU/master", func {
 	if (getprop("/controls/APU/master") == 0) {
 		setprop("/controls/APU/start", 0);
-		apu_egt_checkt.stop();
-		apu_egt2_checkt.stop();
-		apu_stop();
+		if (getprop("/systems/apu/bleedhasbeenused") == 1) {
+			settimer(func { 
+				apu_egt_checkt.stop();
+				apu_egt2_checkt.stop();
+				apu_stop();
+			}, 60); # cooling period
+		} else {
+			apu_egt_checkt.stop();
+			apu_egt2_checkt.stop();
+			apu_stop();
+		}
 	}
 });
 
 var apu_stop = func {
-	interpolate("/systems/apu/rpm", 0, 30);
-	interpolate("/systems/apu/egt", 42, 30);
+	oat = getprop("/environment/temperature-degc");
+	if (getprop("/systems/apu/rpm") > 20 and getprop("/systems/apu/egt") > 245) {
+		interpolate("/systems/apu/rpm", 38, 7);
+		interpolate("/systems/apu/egt", 255, 7);
+		settimer(func {
+			interpolate("/systems/apu/rpm", 20, 6);
+			interpolate("/systems/apu/egt", 245, 6);
+		}, 7);
+		settimer(func {
+			interpolate("/systems/apu/rpm", 7, 20);
+			interpolate("/systems/apu/egt", 220, 20);
+		}, 13);
+		settimer(func {
+			interpolate("/systems/apu/rpm", 0, 22);
+			interpolate("/systems/apu/egt", 200, 22);
+		}, 33);
+		settimer(func {
+			interpolate("/systems/apu/egt", oat, 30);
+		}, 55);
+		apuflap.start();
+	} else if (getprop("/systems/apu/rpm") > 7 and getprop("/systems/apu/egt") > 220) {
+		settimer(func {
+			interpolate("/systems/apu/rpm", 7, 20);
+			interpolate("/systems/apu/egt", 220, 20);
+		}, 13);
+		settimer(func {
+			interpolate("/systems/apu/rpm", 0, 22);
+			interpolate("/systems/apu/egt", 200, 22);
+		}, 33);
+		settimer(func {
+			interpolate("/systems/apu/egt", oat, 30);
+		}, 55);
+	} else if (getprop("/systems/apu/rpm") > 0 and getprop("/systems/apu/egt") > 200) {
+		settimer(func {
+			interpolate("/systems/apu/rpm", 0, 22);
+			interpolate("/systems/apu/egt", 200, 22);
+		}, 33);
+		settimer(func {
+			interpolate("/systems/apu/egt", oat, 30);
+		}, 55);
+	} else if (getprop("/systems/apu/egt") > oat) {
+		settimer(func {
+			interpolate("/systems/apu/egt", oat, 60);
+		}, 55);
+	}
+}
+
+var apu_flap_close = func {
+	if (getprop("/systems/apu/rpm") <= 7) {
+		apuflap.stop();
+		setprop("/systems/apu/flap", 0);
+	}
 }
 
 #######################
@@ -480,3 +564,7 @@ var eng_two_man_startt = maketimer(0.5, eng_two_man_start);
 var eng_two_n2_checkt = maketimer(0.5, eng_two_n2_check);
 var apu_egt_checkt = maketimer(0.5, apu_egt_check);
 var apu_egt2_checkt = maketimer(0.5, apu_egt2_check);
+var apu_egt_updatet = maketimer(0.5, apu_egt_update);
+var apuflap = maketimer(0.2, apu_flap_close);
+var apu_fixt = maketimer(0.2, apu_fix);
+

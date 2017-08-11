@@ -11,6 +11,7 @@ var lowerECAM_eng = nil;
 var lowerECAM_fctl = nil;
 var lowerECAM_display = nil;
 var page = "eng";
+var oat = getprop("/environment/temperature-degc");
 setprop("/systems/electrical/extra/apu-load", 0);
 setprop("/systems/electrical/extra/apu-volts", 0);
 setprop("/systems/electrical/extra/apu-hz", 0);
@@ -118,14 +119,16 @@ var canvas_lowerECAM_apu = {
 		return ["APUN-needle","APUEGT-needle","APUN","APUEGT","APUAvail","APUFlapOpen","APUBleedValve","APUBleedOnline","APUGenLoad","APUGenVolt","APUGenHz","APUBleedPSI","GW","TAT","SAT"];
 	},
 	update: func() {
+		oat = getprop("/environment/temperature-degc");
+		
 		# Avail and Flap Open
-		if (getprop("/systems/apu/rpm") > 3.5 and getprop("/controls/APU/master") == 1) {
+		if (getprop("/systems/apu/flap") == 1) {
 			me["APUFlapOpen"].show();
 		} else {
 			me["APUFlapOpen"].hide();
 		}
 
-		if (getprop("/systems/apu/rpm") > 94.9) {
+		if (getprop("/systems/apu/rpm") > 99.5) {
 			me["APUAvail"].show();
 		} else {
 			me["APUAvail"].hide();
@@ -149,15 +152,15 @@ var canvas_lowerECAM_apu = {
 		me["APUGenHz"].setText(sprintf("%s", math.round(getprop("/systems/electrical/extra/apu-hz"))));
 
 		# APU Bleed
-		if (getprop("/systems/apu/rpm") >= 94.9) {
+		if (getprop("/controls/adirs/ir[1]/knob") != 1 and (getprop("/controls/APU/master") == 1 or getprop("/systems/pneumatic/bleedapu-ind") > 0)) {
 			me["APUBleedPSI"].setColor(0,1,0);
-			me["APUBleedPSI"].setText(sprintf("%s", math.round(getprop("/systems/pneumatic/bleedapu"))));
+			me["APUBleedPSI"].setText(sprintf("%s", math.round(getprop("/systems/pneumatic/bleedapu-ind"))));
 		} else {
 			me["APUBleedPSI"].setColor(1,0.6,0);
 			me["APUBleedPSI"].setText(sprintf("%s", "XX"));
 		}
 
-		if (getprop("/systems/pneumatic/bleedapu") > 0 and getprop("/controls/pneumatic/switches/bleedapu") == 1) {
+		if (getprop("/controls/pneumatic/switches/bleedapu") == 1) {
 			me["APUBleedValve"].setRotation(90*D2R);
 			me["APUBleedOnline"].show();
 		} else {
@@ -166,8 +169,22 @@ var canvas_lowerECAM_apu = {
 		}
 
 		# APU N and EGT
-		me["APUN"].setText(sprintf("%s", math.round(getprop("/systems/apu/rpm"))));
-		me["APUEGT"].setText(sprintf("%s", math.round(getprop("/systems/apu/egt"))));
+		if (getprop("/controls/APU/master") == 1) {
+			me["APUN"].setColor(0,1,0);
+			me["APUN"].setText(sprintf("%s", math.round(getprop("/systems/apu/rpm"))));
+			me["APUEGT"].setColor(0,1,0);
+			me["APUEGT"].setText(sprintf("%s", math.round(getprop("/systems/apu/egt"))));
+		} else if (getprop("/systems/apu/rpm") >= 1) {
+			me["APUN"].setColor(0,1,0);
+			me["APUN"].setText(sprintf("%s", math.round(getprop("/systems/apu/rpm"))));
+			me["APUEGT"].setColor(0,1,0);
+			me["APUEGT"].setText(sprintf("%s", math.round(getprop("/systems/apu/egt"))));
+		} else {
+			me["APUN"].setColor(1,0.6,0);
+			me["APUN"].setText(sprintf("%s", "XX"));
+			me["APUEGT"].setColor(1,0.6,0);
+			me["APUEGT"].setText(sprintf("%s", "XX"));
+		}
 		me["APUN-needle"].setRotation((getprop("/ECAM/Lower/APU-N") + 90)*D2R);
 		me["APUEGT-needle"].setRotation((getprop("/ECAM/Lower/APU-EGT") + 90)*D2R);
 

@@ -193,6 +193,8 @@ var master_elec = func {
 	gen1_fail = getprop("/systems/failures/elec-gen1");
 	gen2_fail = getprop("/systems/failures/elec-gen2");
 	replay = getprop("/sim/replay/replay-state");
+	gen_apu = getprop("/systems/electrical/gen-apu");
+	gen_ext = getprop("/systems/electrical/gen-ext");
 	
 	if (extpwr_on and gen_ext_sw) {
 		setprop("/systems/electrical/gen-ext", 1);
@@ -200,15 +202,12 @@ var master_elec = func {
 		setprop("/systems/electrical/gen-ext", 0);
 	} 
 	
-	if (rpmapu >= 94.9 and gen_apu_sw and !extpwr_on and !gen_ext_sw) {
+	if (rpmapu >= 94.9 and gen_apu_sw and !gen_ext_sw) {
 		setprop("/systems/electrical/gen-apu", 1);
 	} else {
 		setprop("/systems/electrical/gen-apu", 0);
 	}
 	
-	
-	gen_apu = getprop("/systems/electrical/gen-apu");
-	gen_ext = getprop("/systems/electrical/gen-ext");
 	
 	# Left cross tie yes?
 	if (stateL == 3 and gen1_sw and !gen1_fail) {
