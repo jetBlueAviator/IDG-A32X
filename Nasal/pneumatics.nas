@@ -233,7 +233,7 @@ var master_pneu = func {
 		setprop("/systems/pneumatic/bleedapu-available", 0);
 	}
 	
-	if (stateL == 3 and bleed1_sw and !bleedeng1_fail and bleed1f > 8 and bleed1 < bleed1f) {
+	if (stateL == 3 and bleed1_sw and !bleedeng1_fail and bleed1f > 8 and bleed1 < (bleed1f - 3.5)) {
 		setprop("/systems/pneumatic/bleed1", bleed1 + 4);
 	} else if (stateL == 3 and bleed1_sw and !bleedeng1_fail and bleed1f > 8 and bleed1 >= bleed1f) {
 		setprop("/systems/pneumatic/bleed1", bleed1f);
@@ -243,7 +243,7 @@ var master_pneu = func {
 		setprop("/systems/pneumatic/bleed1", 0);
 	}
 	
-	if (stateR == 3 and bleed2_sw and !bleedeng2_fail and bleed2f > 8 and bleed2 < bleed2f) {
+	if (stateR == 3 and bleed2_sw and !bleedeng2_fail and bleed2f > 8 and bleed2 < (bleed2f - 3.5)) {
 		setprop("/systems/pneumatic/bleed2", bleed2 + 4);
 	} else if (stateR == 3 and bleed2_sw and !bleedeng2_fail and bleed2f > 8 and bleed2 >= bleed2f) {
 		setprop("/systems/pneumatic/bleed2", bleed2f);
