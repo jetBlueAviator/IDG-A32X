@@ -1,5 +1,5 @@
 # A3XX JSB Engine System
-# Joshua Davidson (it0uchpods)
+# Joshua Davidson (it0uchpods) and Jonanthan Redpath (legoboyvdlp)
 
 #######################################
 # Copyright (c) A3XX Development Team #
@@ -310,17 +310,18 @@ var apu_fix = func {
 
 setlistener("/controls/APU/start", func {
 	if ((getprop("/controls/APU/master") == 1) and (getprop("/controls/APU/start") == 1) and (getprop("/systems/electrical/bus/dcbat") > 25)) {
-		settimer(func { 
-			setprop("/systems/apu/flap", 1);
-			if (getprop("/systems/acconfig/autoconfig-running") == 0) {
+		if (getprop("/systems/acconfig/autoconfig-running") == 0) {
+			settimer(func { 
+				setprop("/systems/apu/flap", 1);
 				interpolate("/systems/apu/rpm", apu_max, spinup_time);
 				apu_egt_checkt.start();
 				apu_fixt.start();
-			} else if (getprop("/systems/acconfig/autoconfig-running") == 1) {
-				interpolate("/systems/apu/rpm", apu_max, 5);
-				interpolate("/systems/apu/egt", apu_egt_max, 5);
-			}
-		}, 8);
+			}, 8);
+		} else if (getprop("/systems/acconfig/autoconfig-running") == 1) {
+			setprop("/systems/apu/flap", 1);
+			interpolate("/systems/apu/rpm", apu_max, 5);
+			interpolate("/systems/apu/egt", apu_egt_min, 5);
+		}
 	} else if (getprop("/controls/APU/master") == 0) {
 		apu_egt_checkt.stop();
 		apu_stop();
@@ -567,4 +568,3 @@ var apu_egt2_checkt = maketimer(0.5, apu_egt2_check);
 var apu_egt_updatet = maketimer(0.5, apu_egt_update);
 var apuflap = maketimer(0.2, apu_flap_close);
 var apu_fixt = maketimer(0.2, apu_fix);
-
