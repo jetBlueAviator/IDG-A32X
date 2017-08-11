@@ -192,6 +192,11 @@ var master_pneu = func {
 	
 	if (bleedapu_sw and rpmapu >= 94.9) { 
 		setprop("/systems/apu/bleedhasbeenused", 1);
+		setprop("/systems/pneumatic/bleedapu", bleedapui);
+	} else if (bleedapu > 0 and (!bleedapu_sw or rpmapu < 94.9)) { 
+		setprop("/systems/pneumatic/bleedapu", bleedapu - 2);
+	} else {
+		setprop("/systems/pneumatic/bleedapu", 0);
 	}
 	
 	if (!bleedapu_sw and rpmapu >= 94.9) {
