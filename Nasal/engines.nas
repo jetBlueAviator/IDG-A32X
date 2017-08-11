@@ -309,14 +309,16 @@ var apu_fix = func {
 #############
 
 setlistener("/controls/APU/start", func {
-	if ((getprop("/controls/APU/master") == 1) and (getprop("/controls/APU/start") == 1) and (getprop("/systems/electrical/bus/dcbat") > 25)) {
+	if ((getprop("/controls/APU/master") == 1) and (getprop("/controls/APU/start") == 1)) {
 		if (getprop("/systems/acconfig/autoconfig-running") == 0) {
-			settimer(func { 
-				setprop("/systems/apu/flap", 1);
-				interpolate("/systems/apu/rpm", apu_max, spinup_time);
-				apu_egt_checkt.start();
-				apu_fixt.start();
-			}, 8);
+			if (getprop("/systems/electrical/bus/dcbat") > 25) {
+				settimer(func { 
+					setprop("/systems/apu/flap", 1);
+					interpolate("/systems/apu/rpm", apu_max, spinup_time);
+					apu_egt_checkt.start();
+					apu_fixt.start();
+				}, 8);
+			}
 		} else if (getprop("/systems/acconfig/autoconfig-running") == 1) {
 			setprop("/systems/apu/flap", 1);
 			interpolate("/systems/apu/rpm", apu_max, 5);
