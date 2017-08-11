@@ -193,8 +193,6 @@ var master_elec = func {
 	gen1_fail = getprop("/systems/failures/elec-gen1");
 	gen2_fail = getprop("/systems/failures/elec-gen2");
 	replay = getprop("/sim/replay/replay-state");
-	gen_apu = getprop("/systems/electrical/gen-apu");
-	gen_ext = getprop("/systems/electrical/gen-ext");
 	
 	if (extpwr_on and gen_ext_sw) {
 		setprop("/systems/electrical/gen-ext", 1);
@@ -202,12 +200,15 @@ var master_elec = func {
 		setprop("/systems/electrical/gen-ext", 0);
 	} 
 	
-	if (rpmapu >= 94.9 and gen_apu_sw and !gen_ext_sw) {
+	if (rpmapu >= 94.9 and gen_apu_sw and !extpwr_on and !gen_ext_sw) {
 		setprop("/systems/electrical/gen-apu", 1);
 	} else {
 		setprop("/systems/electrical/gen-apu", 0);
 	}
 	
+	
+	gen_apu = getprop("/systems/electrical/gen-apu");
+	gen_ext = getprop("/systems/electrical/gen-ext");
 	
 	# Left cross tie yes?
 	if (stateL == 3 and gen1_sw and !gen1_fail) {
@@ -402,7 +403,7 @@ var master_elec = func {
 		setprop("/systems/electrical/battery2-amps", 0);
 	}
 	
-	if ((dc1 > 0) or (dc2 > 0)) {
+	if ((getprop("/systems/electrical/battery1-amps") > 120) or (getprop("/systems/electrical/battery2-amps") > 120)) {
 		setprop("/systems/electrical/bus/dcbat", dc_volt_std);
 	} else {
 		setprop("/systems/electrical/bus/dcbat", 0);
@@ -420,17 +421,19 @@ var master_elec = func {
 		charge2.stop();
 	}
 	
-	if ((dcbat > 0) and battery1_sw and !batt1_fail) {
+	dc1 = getprop("/systems/electrical/bus/dc1");
+	dc2 = getprop("/systems/electrical/bus/dc2");
+	
+	if ((dc1 > 25 or dc2 > 25) and battery1_sw and !batt1_fail) {
 		decharge1.stop();
 		charge1.start();
 	}
 	
-	if ((dcbat > 0) and battery2_sw and !batt2_fail) {
+	if ((dc1 > 25 or dc2 > 25) and battery2_sw and !batt2_fail) {
 		decharge1.stop();
 		charge2.start();
 	}
 
-	
 	if ((dcbat == 0) and battery1_sw and !batt1_fail) {
 		decharge1.start();
 	}
