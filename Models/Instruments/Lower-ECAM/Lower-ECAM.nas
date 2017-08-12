@@ -116,7 +116,7 @@ var canvas_lowerECAM_apu = {
 		return m;
 	},
 	getKeys: func() {
-		return ["APUN-needle","APUEGT-needle","APUN","APUEGT","APUAvail","APUFlapOpen","APUBleedValve","APUBleedOnline","APUGenLoad","APUGenVolt","APUGenHz","APUBleedPSI","APUfuelLO","GW","TAT","SAT"];
+		return ["APUN-needle","APUEGT-needle","APUN","APUEGT","APUAvail","APUFlapOpen","APUBleedValve","APUBleedOnline","APUGenOnline","APUGentext","APUGenLoad","APUGenbox","APUGenVolt","APUGenHz","APUBleedPSI","APUfuelLO","GW","TAT","SAT","text3724","text3728","text3732"];
 	},
 	update: func() {
 		oat = getprop("/environment/temperature-degc");
@@ -139,7 +139,7 @@ var canvas_lowerECAM_apu = {
 		} else {
 			me["APUfuelLO"].hide();
 		}
-
+		
 		# APU Gen
 		if (getprop("/systems/electrical/extra/apu-volts") > 110) {
 			me["APUGenVolt"].setColor(0,1,0);
@@ -151,6 +151,36 @@ var canvas_lowerECAM_apu = {
 			me["APUGenHz"].setColor(0,1,0);
 		} else {
 			me["APUGenHz"].setColor(1,0.6,0);
+		}
+		
+		if (getprop("/controls/APU/master") == 1) {
+			me["APUGenbox"].show();
+			me["APUGenHz"].show();
+			me["APUGenVolt"].show();
+			me["APUGenLoad"].show();
+			me["text3724"].show();
+			me["text3728"].show();
+			me["text3732"].show();
+		} else {
+			me["APUGenbox"].hide();
+			me["APUGenHz"].hide();
+			me["APUGenVolt"].hide();
+			me["APUGenLoad"].hide();
+			me["text3724"].hide();
+			me["text3728"].hide();
+			me["text3732"].hide();
+		}
+		
+		if ((getprop("/systems/apu/rpm") > 94.9) and (getprop("/controls/electrical/switches/gen-apu") == 1)) {
+			me["APUGenOnline"].show();
+		} else {
+			me["APUGenOnline"].hide();
+		}
+		
+		if ((getprop("/controls/APU/master") == 0) or ((getprop("/controls/APU/master") == 1) and (getprop("/controls/electrical/switches/gen-apu") == 1) and (getprop("/systems/apu/rpm") > 94.9))) {
+			me["APUGentext"].setColor(1,1,1);
+		} else if ((getprop("/controls/APU/master") == 1) and (getprop("/controls/electrical/switches/gen-apu") == 0) and (getprop("/systems/apu/rpm") < 94.9)) { 
+			me["APUGentext"].setColor(1,0.6,0);
 		}
 
 		me["APUGenLoad"].setText(sprintf("%s", math.round(getprop("/systems/electrical/extra/apu-load"))));

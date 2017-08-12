@@ -286,7 +286,7 @@
 			</checkbox>
 			
 			<checkbox>
-				<label>Enable External Air</label>
+				<label>Enable External Air (HP)</label>
 				<halign>left</halign>
 				<property>/controls/pneumatic/switches/groundair</property>
 				<binding>
