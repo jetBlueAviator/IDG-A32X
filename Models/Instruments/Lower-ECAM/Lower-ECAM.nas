@@ -116,7 +116,7 @@ var canvas_lowerECAM_apu = {
 		return m;
 	},
 	getKeys: func() {
-		return ["APUN-needle","APUEGT-needle","APUN","APUEGT","APUAvail","APUFlapOpen","APUBleedValve","APUBleedOnline","APUGenLoad","APUGenVolt","APUGenHz","APUBleedPSI","GW","TAT","SAT"];
+		return ["APUN-needle","APUEGT-needle","APUN","APUEGT","APUAvail","APUFlapOpen","APUBleedValve","APUBleedOnline","APUGenLoad","APUGenVolt","APUGenHz","APUBleedPSI","APUfuelLO","GW","TAT","SAT"];
 	},
 	update: func() {
 		oat = getprop("/environment/temperature-degc");
@@ -132,6 +132,12 @@ var canvas_lowerECAM_apu = {
 			me["APUAvail"].show();
 		} else {
 			me["APUAvail"].hide();
+		}
+		
+		if (getprop("/fdm/jsbsim/propulsion/tank[2]/contents-lbs") < 100) {
+			me["APUfuelLO"].show();
+		} else {
+			me["APUfuelLO"].hide();
 		}
 
 		# APU Gen

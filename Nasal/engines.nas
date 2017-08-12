@@ -309,7 +309,7 @@ var apu_fix = func {
 #############
 
 setlistener("/controls/APU/start", func {
-	if ((getprop("/controls/APU/master") == 1) and (getprop("/controls/APU/start") == 1)) {
+	if ((getprop("/controls/APU/master") == 1) and (getprop("/controls/APU/start") == 1) and (getprop("/fdm/jsbsim/propulsion/tank[2]/contents-lbs") > 100)) {
 		if (getprop("/systems/acconfig/autoconfig-running") == 0) {
 			if (getprop("/systems/electrical/bus/dcbat") > 25) {
 				settimer(func { 
