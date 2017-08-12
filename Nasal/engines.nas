@@ -352,7 +352,11 @@ var apu_egt2_check = func {
 
 setlistener("/controls/APU/master", func {
 	if (getprop("/controls/APU/master") == 0) {
-		if (getprop("/systems/acconfig/autoconfig-running") == 0) {
+		if (getprop("/systems/acconfig/autoconfig-running") == 1) {
+			apu_egt_checkt.stop();
+			apu_egt2_checkt.stop();
+			apu_stop();
+		} else {
 			setprop("/controls/APU/start", 0);
 			if (getprop("/systems/apu/bleedhasbeenused") == 1) {
 				settimer(func { 
@@ -365,17 +369,17 @@ setlistener("/controls/APU/master", func {
 				apu_egt2_checkt.stop();
 				apu_stop();
 			}
-		} else { 
-		apu_egt_checkt.stop();
-		apu_egt2_checkt.stop();
-		apu_stop();
 		}
 	}
 });
 
 var apu_stop = func {
 	oat = getprop("/environment/temperature-degc");
-	if (getprop("/systems/acconfig/autoconfig-running") == 0) {
+	if (getprop("/systems/acconfig/autoconfig-running") == 1) {
+		interpolate("/systems/apu/rpm", 0, 5);
+		interpolate("/systems/apu/egt", oat, 5);
+		apu_flap.start();
+	} else {
 		if (getprop("/systems/apu/rpm") > 20 and getprop("/systems/apu/egt") > 245) {
 			interpolate("/systems/apu/rpm", 38, 7);
 			interpolate("/systems/apu/egt", 255, 7);
@@ -394,7 +398,7 @@ var apu_stop = func {
 			settimer(func {
 				interpolate("/systems/apu/egt", oat, 30);
 			}, 55);
-			apuflap.start();
+			apu_flap.start();
 		} else if (getprop("/systems/apu/rpm") > 7 and getprop("/systems/apu/egt") > 220) {
 			settimer(func {
 				interpolate("/systems/apu/rpm", 7, 20);
@@ -420,16 +424,12 @@ var apu_stop = func {
 				interpolate("/systems/apu/egt", oat, 60);
 			}, 55);
 		}
-	} else {
-		interpolate("/systems/apu/rpm", 0, 5);
-		interpolate("/systems/apu/egt", oat, 5);
-		apu_flap.start();
 	}
 }
 
 var apu_flap_close = func {
 	if (getprop("/systems/apu/rpm") <= 7) {
-		apuflap.stop();
+		apu_flap.stop();
 		setprop("/systems/apu/flap", 0);
 	}
 }
@@ -580,5 +580,5 @@ var eng_two_n2_checkt = maketimer(0.5, eng_two_n2_check);
 var apu_egt_checkt = maketimer(0.5, apu_egt_check);
 var apu_egt2_checkt = maketimer(0.5, apu_egt2_check);
 var apu_egt_updatet = maketimer(0.5, apu_egt_update);
-var apuflap = maketimer(0.2, apu_flap_close);
+var apu_flap = maketimer(0.2, apu_flap_close);
 var apu_fixt = maketimer(0.2, apu_fix);
