@@ -352,66 +352,78 @@ var apu_egt2_check = func {
 
 setlistener("/controls/APU/master", func {
 	if (getprop("/controls/APU/master") == 0) {
-		setprop("/controls/APU/start", 0);
-		if (getprop("/systems/apu/bleedhasbeenused") == 1) {
-			settimer(func { 
+		if (getprop("/systems/acconfig/autoconfig-running") == 0) {
+			setprop("/controls/APU/start", 0);
+			if (getprop("/systems/apu/bleedhasbeenused") == 1) {
+				settimer(func { 
+					apu_egt_checkt.stop();
+					apu_egt2_checkt.stop();
+					apu_stop();
+				}, 60); # cooling period
+			} else {
 				apu_egt_checkt.stop();
 				apu_egt2_checkt.stop();
 				apu_stop();
-			}, 60); # cooling period
-		} else {
-			apu_egt_checkt.stop();
-			apu_egt2_checkt.stop();
-			apu_stop();
+			}
+		} else { 
+		apu_egt_checkt.stop();
+		apu_egt2_checkt.stop();
+		apu_stop();
 		}
 	}
 });
 
 var apu_stop = func {
 	oat = getprop("/environment/temperature-degc");
-	if (getprop("/systems/apu/rpm") > 20 and getprop("/systems/apu/egt") > 245) {
-		interpolate("/systems/apu/rpm", 38, 7);
-		interpolate("/systems/apu/egt", 255, 7);
-		settimer(func {
-			interpolate("/systems/apu/rpm", 20, 6);
-			interpolate("/systems/apu/egt", 245, 6);
-		}, 7);
-		settimer(func {
-			interpolate("/systems/apu/rpm", 7, 20);
-			interpolate("/systems/apu/egt", 220, 20);
-		}, 13);
-		settimer(func {
-			interpolate("/systems/apu/rpm", 0, 22);
-			interpolate("/systems/apu/egt", 200, 22);
-		}, 33);
-		settimer(func {
-			interpolate("/systems/apu/egt", oat, 30);
-		}, 55);
-		apuflap.start();
-	} else if (getprop("/systems/apu/rpm") > 7 and getprop("/systems/apu/egt") > 220) {
-		settimer(func {
-			interpolate("/systems/apu/rpm", 7, 20);
-			interpolate("/systems/apu/egt", 220, 20);
-		}, 13);
-		settimer(func {
-			interpolate("/systems/apu/rpm", 0, 22);
-			interpolate("/systems/apu/egt", 200, 22);
-		}, 33);
-		settimer(func {
-			interpolate("/systems/apu/egt", oat, 30);
-		}, 55);
-	} else if (getprop("/systems/apu/rpm") > 0 and getprop("/systems/apu/egt") > 200) {
-		settimer(func {
-			interpolate("/systems/apu/rpm", 0, 22);
-			interpolate("/systems/apu/egt", 200, 22);
-		}, 33);
-		settimer(func {
-			interpolate("/systems/apu/egt", oat, 30);
-		}, 55);
-	} else if (getprop("/systems/apu/egt") > oat) {
-		settimer(func {
-			interpolate("/systems/apu/egt", oat, 60);
-		}, 55);
+	if (getprop("/systems/acconfig/autoconfig-running") == 0) {
+		if (getprop("/systems/apu/rpm") > 20 and getprop("/systems/apu/egt") > 245) {
+			interpolate("/systems/apu/rpm", 38, 7);
+			interpolate("/systems/apu/egt", 255, 7);
+			settimer(func {
+				interpolate("/systems/apu/rpm", 20, 6);
+				interpolate("/systems/apu/egt", 245, 6);
+			}, 7);
+			settimer(func {
+				interpolate("/systems/apu/rpm", 7, 20);
+				interpolate("/systems/apu/egt", 220, 20);
+			}, 13);
+			settimer(func {
+				interpolate("/systems/apu/rpm", 0, 22);
+				interpolate("/systems/apu/egt", 200, 22);
+			}, 33);
+			settimer(func {
+				interpolate("/systems/apu/egt", oat, 30);
+			}, 55);
+			apuflap.start();
+		} else if (getprop("/systems/apu/rpm") > 7 and getprop("/systems/apu/egt") > 220) {
+			settimer(func {
+				interpolate("/systems/apu/rpm", 7, 20);
+				interpolate("/systems/apu/egt", 220, 20);
+			}, 13);
+			settimer(func {
+				interpolate("/systems/apu/rpm", 0, 22);
+				interpolate("/systems/apu/egt", 200, 22);
+			}, 33);
+			settimer(func {
+				interpolate("/systems/apu/egt", oat, 30);
+			}, 55);
+		} else if (getprop("/systems/apu/rpm") > 0 and getprop("/systems/apu/egt") > 200) {
+			settimer(func {
+				interpolate("/systems/apu/rpm", 0, 22);
+				interpolate("/systems/apu/egt", 200, 22);
+			}, 33);
+			settimer(func {
+				interpolate("/systems/apu/egt", oat, 30);
+			}, 55);
+		} else if (getprop("/systems/apu/egt") > oat) {
+			settimer(func {
+				interpolate("/systems/apu/egt", oat, 60);
+			}, 55);
+		}
+	} else {
+		interpolate("/systems/apu/rpm", 0, 5);
+		interpolate("/systems/apu/egt", oat, 5);
+		apu_flap.start();
 	}
 }
 
