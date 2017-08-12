@@ -356,6 +356,7 @@ setlistener("/controls/APU/master", func {
 			apu_egt_checkt.stop();
 			apu_egt2_checkt.stop();
 			apu_stop();
+			setprop("/systems/apu/bleedhasbeenused", 0);
 		} else {
 			setprop("/controls/APU/start", 0);
 			if (getprop("/systems/apu/bleedhasbeenused") == 1) {
@@ -363,6 +364,7 @@ setlistener("/controls/APU/master", func {
 					apu_egt_checkt.stop();
 					apu_egt2_checkt.stop();
 					apu_stop();
+					setprop("/systems/apu/bleedhasbeenused", 0);
 				}, 60); # cooling period
 			} else {
 				apu_egt_checkt.stop();
